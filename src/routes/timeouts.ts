@@ -43,6 +43,6 @@ export function cancelTimeout(identifier: string) {
 		clearTimeout(timeouts[identifier]);
 		delete timeouts[identifier];
 	} else {
-		console.error(`Timeout with identifier ${identifier} not found`);
+		console.warn(`Timeout with identifier ${identifier} not found`);
 	}
 }
