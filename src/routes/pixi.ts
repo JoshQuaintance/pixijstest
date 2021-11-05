@@ -4,9 +4,11 @@ import { cancelTimeout, executeAfterTimeout } from './timeouts';
 import '@mszu/pixi-ssr-shim';
 import * as PIXI from 'pixi.js';
 
+import Spawner from './Spawner';
+
 function createApp(): PIXI.Application {
     return new PIXI.Application({
-        backgroundColor: 0xaaaaaa,
+        backgroundColor: 0xfaf0f2,
         width: window.innerWidth,
         height: window.innerHeight,
     });
@@ -27,81 +29,99 @@ export async function run(el: HTMLDivElement) {
 
     el.appendChild(app.view);
 
-    // Sprite
-    let circle = createSprite('images/chair.png');
-    circle.x = app.view.width / 2;
-    circle.y = app.view.height / 2;
-    app.stage.addChild(circle);
+    const circleSpawner = new Spawner('images/seat.svg', app);
+    // const circleSpawners = new Spawner('images/seat.svg', app);
+    // circleSpawners.sprite.x += 60;
 
-    // Make stage interactive
-    app.stage.interactive = true;
-    app.stage.on('mousedown', userPress);
-    app.stage.on('mousemove', userMove);
-    app.stage.on('mouseup', userUp);
-	window.addEventListener('mouseup', () => circle.dragging = false)
+    const line = new PIXI.Graphics();
+    // 0xF0D1D9
+    line.lineStyle(3.5, 0xdc93a5);
+    line.beginFill(0xf0d1d9);
+    line.moveTo(0, app.view.height - (15 / 100) * app.view.height);
+    line.lineTo(app.view.width, app.view.height - (15 / 100) * app.view.height);
+    line.drawRect(0, app.view.height - (15 / 100) * app.view.height, app.view.width, app.view.height);
 
-    let spriteHalfHeight = Math.floor(circle.height / 2);
-    let spriteHalfWidth = Math.floor(circle.width / 2);
+    // line.moveTo(0, app.stage.height - (15 / 100) * app.view.height);
+    // line.lineTo(app.stage.width, app.stage.height - (15 / 100) * app.view.height);
+    line.endFill();
+    app.stage.addChild(line);
 
-    executeAfterTimeout(
-        () => {
-            spriteHalfHeight = Math.floor(circle.height / 2);
-            spriteHalfWidth = Math.floor(circle.width / 2);
-        },
-        200,
-        'gethalfwidth',
-        true
-    );
-    const { width: screenWidth, height: screenHeight } = app.screen;
-	let n
+    // const crateSpawner = new Spawner('images/chair.png', app);
 
-    function userPress(e) {
-        let { x, y } = e.data.global;
+    // // Sprite
+    // let circle = createSprite('images/chair.png');
+    // circle.x = app.view.width / 2;
+    // circle.y = app.view.height / 2;
+    // app.stage.addChild(circle);
 
-        n = e.data.getLocalPosition(circle);
-        console.log(n.x / 100, n.y / 100, Math.abs(n.x / 100), Math.abs(n.y / 100));
-        circle.anchor.set(Math.abs(n.x / 100), Math.abs(n.y / 100));
+    // // Make stage interactive
+    // circle.interactive = true;
+    // circle.on('mousedown', userPress);
+    // circle.on('mousemove', userMove);
+    // circle.on('mouseup', userUp);
+    // circle.containerUpdateTransform()
+    // window.addEventListener('mouseup', () => circle.dragging = false)
 
-        if (x > spriteHalfWidth && x < screenWidth - spriteHalfWidth) circle.x = x;
-        if (y > spriteHalfHeight && y < screenHeight - spriteHalfHeight) circle.y = y;
+    // let spriteHalfHeight = Math.floor(circle.height / 2);
+    // let spriteHalfWidth = Math.floor(circle.width / 2);
 
-        circle.dragging = true;
-    }
+    // executeAfterTimeout(
+    //     () => {
+    //         spriteHalfHeight = Math.floor(circle.height / 2);
+    //         spriteHalfWidth = Math.floor(circle.width / 2);
+    //     },
+    //     200,
+    //     'gethalfwidth',
+    //     true
+    // );
+    // const { width: screenWidth, height: screenHeight } = app.screen;
+    // let n
 
-    function userMove(e) {
-        if (circle.dragging) {
-            let { x, y } = e.data.global;
+    // function userPress(e) {
+    //     let { x, y } = e.data.global;
 
-            if (x > spriteHalfWidth && x < screenWidth - spriteHalfWidth) circle.x = x;
-            if (y > spriteHalfHeight && y < screenHeight - spriteHalfHeight) circle.y = y;
+    //     n = e.data.getLocalPosition(circle);
+    //     circle.anchor.set(Math.abs(n.x / 100), Math.abs(n.y / 100));
 
-            if (x < 0 || y < 0 || x > screenWidth || y > screenHeight) {
-                executeAfterTimeout(
-                    () => {
-                        circle.dragging = false;
-                    },
-                    1000,
-                    'sprite-timeout',
-                    true
-                );
-            } else {
-                cancelTimeout('sprite-timeout');
-            }
-        }
-    }
+    //     if (x > spriteHalfWidth && x < screenWidth - spriteHalfWidth) circle.x = x;
+    //     if (y > spriteHalfHeight && y < screenHeight - spriteHalfHeight) circle.y = y;
 
-    function userUp(e) {
-        circle.dragging = false;
+    //     circle.dragging = true;
+    // }
 
-        let { x, y } = e.data.global;
-		
-		circle.anchor.set(0)
-		console.log('d', n, x + n.x, y + n.y)
-        if (x > spriteHalfWidth && x < screenWidth - spriteHalfWidth) circle.x = x - n.x;
-        if (y > spriteHalfHeight && y < screenHeight - spriteHalfHeight) circle.y = y - n.y;
-		
-		// circle.x = x + d.x;
-		// circle.y = y + d.y
-		// executeAfterTimeout(() => circle.anchor.set(0), 100, 'anchor-set', true)
-    }
+    // function userMove(e) {
+    //     if (circle.dragging) {
+    //         let { x, y } = e.data.global;
+
+    //         if (x > spriteHalfWidth && x < screenWidth - spriteHalfWidth) circle.x = x;
+    //         if (y > spriteHalfHeight && y < screenHeight - spriteHalfHeight) circle.y = y;
+
+    //         if (x < 0 || y < 0 || x > screenWidth || y > screenHeight) {
+    //             executeAfterTimeout(
+    //                 () => {
+    //                     circle.dragging = false;
+    //                 },
+    //                 1000,
+    //                 'sprite-timeout',
+    //                 true
+    //             );
+    //         } else {
+    //             cancelTimeout('sprite-timeout');
+    //         }
+    //     }
+    // }
+
+    // function userUp(e) {
+    //     circle.dragging = false;
+
+    //     let { x, y } = e.data.global;
+
+    // 	circle.anchor.set(0)
+    //     if (x > spriteHalfWidth && x < screenWidth - spriteHalfWidth) circle.x = x - n.x;
+    //     if (y > spriteHalfHeight && y < screenHeight - spriteHalfHeight) circle.y = y - n.y;
+
+    // 	// circle.x = x + d.x;
+    // 	// circle.y = y + d.y
+    // 	// executeAfterTimeout(() => circle.anchor.set(0), 100, 'anchor-set', true)
+    // }
 }
