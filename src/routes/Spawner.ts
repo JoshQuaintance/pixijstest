@@ -5,21 +5,18 @@ import { executeAfterTimeout, cancelTimeout } from './utils/timeouts';
 import { percent } from './utils/math';
 
 export default class Spawner {
-    private _src: string;
+    private _src: PIXI.Texture;
     private _sprite: PIXI.Sprite;
 
     private static _spawners = [];
 
-    constructor(src: string, app: PIXI.Application) {
-        if (!src.startsWith('images/'))
-            throw Error('Images for sprite have to be served from images/ in static/images');
+    constructor(src: PIXI.Texture, app: PIXI.Application) {
 
         this._src = src;
-        let texture = PIXI.Texture.from(src);
-        this._sprite = new PIXI.Sprite(texture);
+        this._sprite = new PIXI.Sprite(this._src);
 
         this._sprite.scale.set(percent(1.5, percent(15, app.view.height)) / 10);
-        this._sprite.anchor.set(0, 0.5);
+        // this._sprite.anchor.set(0.5, 0.5);
 
         // executeAfterTimeout(
         //     () => {
