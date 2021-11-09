@@ -24,14 +24,12 @@ export function executeAfterTimeout(
 	}
 
 	let newTimeout = setTimeout(() => {
-		console.log(timeouts);
 		callback();
 		// Automatically clears the timeout and deletes it from the 'timeouts' object after it's run
 		clearTimeout(timeouts[identifier]);
 		delete timeouts[identifier];
 	}, time);
 	timeouts[identifier] = newTimeout;
-	console.log(timeouts);
 }
 
 /**
