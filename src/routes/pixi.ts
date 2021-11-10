@@ -139,63 +139,41 @@ function execute() {
     viewport.addChild(circleSpawner.sprite);
 
     interface DraggingSprite extends PIXI.Sprite {
-        dragging: boolean;
+        dragging: { x; y };
         data?: PIXI.InteractionData;
-        anchorCord: {
-            x: number;
-            y: number;
-        };
     }
 
     function onDragStart(e: PIXI.InteractionEvent) {
         const sprite: DraggingSprite = e.currentTarget as DraggingSprite;
         const viewport = App.viewport;
 
-        sprite.anchor.set(0);
-        console.log(e.data.originalEvent.currentTarget)
-
-        sprite.anchorCord = e.data.getLocalPosition(e.currentTarget);
-        let { x, y } = sprite.anchorCord;
-        // console.log(sprite.anchorCord, Math.abs(x / 1000), Math.abs(y / 1000))
-        sprite.anchor.set(Math.abs(x / 1000), Math.abs(y / 1000));
-        console.log(x, y);
-        console.log(sprite.anchor)
-        // console.log(sprite.width, sprite.height);
-
-        // sprite.anchor.set(0.5)
-
-        sprite.alpha = 0.5;
         sprite.data = e.data;
-        sprite.dragging = true;
-        viewport.drag({ pressDrag: false });
+        sprite.alpha = 0.5;
+        let { x, y } = e.data.getLocalPosition(viewport);
+        sprite.dragging = { x, y };
     }
 
-    
-        function onDragMove(e: PIXI.InteractionEvent) {
-            const sprite: DraggingSprite = e.currentTarget as DraggingSprite;
-            
-            if (sprite.dragging) {
-                console.log(sprite.anchor)
-                const { x, y } = sprite.data!.getLocalPosition(App.viewport);
-    
-                sprite.x = x + sprite.anchorCord.x / 100;
-                sprite.y = y + sprite.anchorCord.y / 100;
-            }
-        }
     function onDragEnd(e: PIXI.InteractionEvent) {
         const sprite: DraggingSprite = e.currentTarget as DraggingSprite;
-        const viewport = App.viewport;
-        const anchor = sprite.anchorCord;
 
         sprite.alpha = 1;
-        sprite.dragging = false;
+        sprite.dragging = null;
         sprite.data = null;
-        viewport.drag();
+    }
 
-        // const { x, y } = sprite.data!.getLocalPosition(App.viewport);
+    function onDragMove(e: PIXI.InteractionEvent) {
+        const sprite: DraggingSprite = e.currentTarget as DraggingSprite;
+        const viewport = App.viewport;
 
-        // sprite.x = x -anchor.x;
-        // sprite.y = anchor.y
+        if (sprite.dragging) {
+            let { x, y } = e.data.getLocalPosition(viewport);
+            // console.log(x, y, ' || ', sprite.dragging.x, sprite.dragging.y);
+
+            // if (sprite.position.x)
+            sprite.position.x += x - sprite.dragging.x;
+            sprite.position.y += y - sprite.dragging.y;
+            sprite.dragging = { x, y };
+        }
     }
 
     circleSpawner.sprite.on('pointerdown', onDragStart);
