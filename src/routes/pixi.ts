@@ -137,7 +137,6 @@ function execute() {
     circleSpawner.sprite.x = viewport.worldWidth / 2;
     circleSpawner.sprite.y = viewport.worldHeight / 2;
     viewport.addChild(circleSpawner.sprite);
-
     interface DraggingSprite extends PIXI.Sprite {
         dragging: { x; y };
         data?: PIXI.InteractionData;
@@ -167,12 +166,14 @@ function execute() {
 
         if (sprite.dragging) {
             let { x, y } = e.data.getLocalPosition(viewport);
-            // console.log(x, y, ' || ', sprite.dragging.x, sprite.dragging.y);
 
-            // if (sprite.position.x)
-            sprite.position.x += x - sprite.dragging.x;
-            sprite.position.y += y - sprite.dragging.y;
-            sprite.dragging = { x, y };
+            let spriteHalfWidth = sprite.width / 2;
+
+            if (spriteHalfWidth + sprite.position.x + (x - sprite.dragging.x) <= 8000 - border.line.width) {
+                sprite.position.x += x - sprite.dragging.x;
+                sprite.position.y += y - sprite.dragging.y;
+                sprite.dragging = { x, y };
+            }
         }
     }
 
