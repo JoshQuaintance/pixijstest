@@ -1,6 +1,8 @@
+import type { InteractionData, InteractionEvent, utils as P_Utils } from 'pixi.js';
+
 // Make sure PIXI have enough information so development dev mode works fluently
 import '@mszu/pixi-ssr-shim';
-import * as PIXI from 'pixi.js';
+import { Application, Sprite, LoaderResource, Graphics } from 'pixi.js';
 import { Viewport } from 'pixi-viewport';
 
 import { percent } from './utils/math';
@@ -8,17 +10,17 @@ import Spawner from './Spawner';
 import Container from './Container';
 import { cancelTimeout, executeAfterTimeout } from './utils/timeouts';
 
-function createApp(): PIXI.Application {
-    return new PIXI.Application({
+function createApp(): Application {
+    return new Application({
         backgroundColor: 0xfaf0f2,
         resizeTo: window,
         autoStart: false,
     });
 }
 
-function createSprite(src: string): PIXI.Sprite {
+function createSprite(src: string): Sprite {
     if (!src.startsWith('images/')) throw Error('Images for sprite have to be served from images/ in static/images');
-    const sprite = PIXI.Sprite.from(src);
+    const sprite = Sprite.from(src);
     // sprite.anchor.set(0.5);
 
     return sprite;
@@ -30,19 +32,19 @@ function createSprite(src: string): PIXI.Sprite {
  */
 export class App {
     private static _viewport: Viewport;
-    private static _app: PIXI.Application;
-    private static _resources: PIXI.utils.Dict<PIXI.LoaderResource>;
+    private static _app: Application;
+    private static _resources: P_Utils.Dict<LoaderResource>;
     static parentEl: HTMLDivElement;
 
     static set viewport(vp: Viewport) {
         this._viewport = vp;
     }
 
-    static set app(application: PIXI.Application) {
+    static set app(application: Application) {
         this._app = application;
     }
 
-    static set resources(res: PIXI.utils.Dict<PIXI.LoaderResource>) {
+    static set resources(res: P_Utils.Dict<LoaderResource>) {
         this._resources = res;
     }
 
@@ -59,11 +61,11 @@ export class App {
     }
 }
 
-function loaderProgress(e) {
+function loaderProgress(e: { progress: any }) {
     console.log(`Progress: ${e.progress}`);
 }
 
-function loaderError(e) {
+function loaderError(e: { message: string }) {
     alert('Error Loading' + e.message);
 }
 
@@ -125,7 +127,7 @@ function execute() {
     viewport.fit(false, viewport.screenWidth, viewport.screenHeight);
     viewport.moveCenter(viewport.worldWidth / 2, viewport.worldHeight / 2);
 
-    const border = viewport.addChild(new PIXI.Graphics());
+    const border = viewport.addChild(new Graphics());
     border.lineStyle(20, 0xff0000).drawRect(0, 0, viewport.worldWidth, viewport.worldHeight);
 
     app.stage.addChild(viewport);
@@ -133,16 +135,18 @@ function execute() {
     app.start();
 
     let texture = App.resources.rounded_seat.texture;
+
     const circleSpawner = new Spawner(texture, app);
     circleSpawner.sprite.x = viewport.worldWidth / 2;
     circleSpawner.sprite.y = viewport.worldHeight / 2;
+
     viewport.addChild(circleSpawner.sprite);
-    interface DraggingSprite extends PIXI.Sprite {
+    interface DraggingSprite extends Sprite {
         dragging: { x; y };
-        data?: PIXI.InteractionData;
+        data?: InteractionData;
     }
 
-    function onDragStart(e: PIXI.InteractionEvent) {
+    function onDragStart(e: InteractionEvent) {
         const sprite: DraggingSprite = e.currentTarget as DraggingSprite;
         const viewport = App.viewport;
 
@@ -152,7 +156,7 @@ function execute() {
         sprite.dragging = { x, y };
     }
 
-    function onDragEnd(e: PIXI.InteractionEvent) {
+    function onDragEnd(e: InteractionEvent) {
         const sprite: DraggingSprite = e.currentTarget as DraggingSprite;
 
         sprite.alpha = 1;
@@ -160,16 +164,33 @@ function execute() {
         sprite.data = null;
     }
 
-    function onDragMove(e: PIXI.InteractionEvent) {
+    function checkIfBeyondWorld(sprite: DraggingSprite, x: number, y: any) {
+        let spriteMoveX = sprite.position.x + (x - sprite.dragging.x);
+        let spriteMoveY = sprite.position.y + (y - sprite.dragging.y);
+
+        // Check if beyond in the x-axis
+        if (
+            spriteMoveX + sprite.width > viewport.worldWidth - border.line.width / 2 ||
+            spriteMoveX < 0 + border.line.width / 2
+        )
+            return true;
+
+        // Check if beyond in the y-axis
+        if (
+            spriteMoveY + sprite.height > viewport.worldHeight - border.line.width / 2 ||
+            spriteMoveY < border.line.width / 2
+        )
+            return true;
+    }
+
+    function onDragMove(e: InteractionEvent) {
         const sprite: DraggingSprite = e.currentTarget as DraggingSprite;
         const viewport = App.viewport;
 
         if (sprite.dragging) {
             let { x, y } = e.data.getLocalPosition(viewport);
 
-            let spriteHalfWidth = sprite.width / 2;
-
-            if (spriteHalfWidth + sprite.position.x + (x - sprite.dragging.x) <= 8000 - border.line.width) {
+            if (!checkIfBeyondWorld(sprite, x, y)) {
                 sprite.position.x += x - sprite.dragging.x;
                 sprite.position.y += y - sprite.dragging.y;
                 sprite.dragging = { x, y };
@@ -187,11 +208,11 @@ function execute() {
 // viewport.addChild(spawnerContainer.this);
 // let seatingContainer = new Container();
 // app.stage.addChild(seatingContainer.this);
-// const rect = new PIXI.Graphics();
+// const rect = new Graphics();
 // rect.beginFill(0xdea3f8).drawRect(0, 0, app.view.width, percent(85, app.view.height)).endFill();
 // seatingContainer.addChild(rect);
 // Bottom Bar
-// const line = new PIXI.Graphics();
+// const line = new Graphics();
 // 0xF0D1D9 0xdc93a5
 // line.lineStyle(3.5, 0xdc93a5, 0.7)
 //     .beginFill(0xf0d1d9)
