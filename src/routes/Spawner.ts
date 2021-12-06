@@ -1,8 +1,10 @@
 import '@mszu/pixi-ssr-shim';
 import * as PIXI from 'pixi.js';
 
+
 import { executeAfterTimeout, cancelTimeout } from './utils/timeouts';
 import { percent } from './utils/math';
+
 
 export default class Spawner {
     private _src: PIXI.Texture;
