@@ -1,4 +1,10 @@
-import type { InteractionData, InteractionEvent, utils as P_Utils } from 'pixi.js';
+import type {
+    InteractionData,
+    InteractionEvent,
+    utils as P_Utils,
+    Container as PIXIContainer,
+    DisplayObject,
+} from 'pixi.js';
 
 // Make sure PIXI have enough information so development dev mode works fluently
 import '@mszu/pixi-ssr-shim';
@@ -9,7 +15,6 @@ import { percent } from './utils/math';
 import Spawner from './Spawner';
 import Container from './Container';
 import { cancelTimeout, executeAfterTimeout } from './utils/timeouts';
-import { setupPixiLayout, makeLayout } from 'pixi-layout';
 
 function createApp(): Application {
     return new Application({
@@ -134,7 +139,6 @@ function execute() {
     app.stage.addChild(viewport);
 
     app.start();
-    setupPixiLayout({ renderer: app.renderer, stage: app.stage });
 
     // @ts-ignore
 
@@ -198,25 +202,37 @@ function execute() {
         }
     }
 
-    // circleSpawner.sprite.on('pointerdown', onDragStart);
-    // circleSpawner.sprite.on('pointermove', onDragMove);
-    // circleSpawner.sprite.on('pointerup', onDragEnd);
-    // circleSpawner.sprite.on('pointerupoutside', onDragEnd);
-
     let seatingContainer = new Container();
+
+    // seatingContainer.this.height = percent(22, app.view.height);
     const rect = new Graphics();
 
     rect.beginFill(0xdea3f8)
         .drawRect(0, percent(88, app.view.height), app.view.width, percent(85, app.view.height))
         .endFill();
-    // rect.zIndex = 100;
 
-    seatingContainer.addChild(rect, false);
+    function seatingContainerFunction(container: PIXIContainer, child: DisplayObject) {
+        if (!(child instanceof Sprite)) return;
+
+        child.anchor.set(0.5);
+        child.scale.set(0.15);
+        child.x = container.width / 2;
+        child.y = percent(88, app.view.height) + percent(50, percent(12, app.view.height))
+
+        container.addChild(child);
+    }
+
+    seatingContainer.addChild(rect);
 
     let texture = App.resources.rounded_seat.texture;
 
     const circleSpawner = new Spawner(texture, app);
 
-    seatingContainer.addChild(circleSpawner.sprite);
+    circleSpawner.sprite.on('pointerdown', onDragStart);
+    circleSpawner.sprite.on('pointermove', onDragMove);
+    circleSpawner.sprite.on('pointerup', onDragEnd);
+    circleSpawner.sprite.on('pointerupoutside', onDragEnd);
+
+    seatingContainer.addChild(circleSpawner.sprite, seatingContainerFunction);
     app.stage.addChild(seatingContainer.this);
 }
