@@ -1,5 +1,4 @@
 import '@mszu/pixi-ssr-shim';
-import { Align, makeLayout } from 'pixi-layout';
 import { Container as PIXI_Container, Graphics, DisplayObject, Sprite } from 'pixi.js';
 import { xlink_attr } from 'svelte/internal';
 import { App } from './pixi';

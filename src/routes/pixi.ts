@@ -1,10 +1,4 @@
-import type {
-    InteractionData,
-    InteractionEvent,
-    utils as P_Utils,
-    Container as PIXIContainer,
-    DisplayObject,
-} from 'pixi.js';
+import type { InteractionEvent, utils as P_Utils, Container as PIXIContainer, DisplayObject } from 'pixi.js';
 
 // Make sure PIXI have enough information so development dev mode works fluently
 import '@mszu/pixi-ssr-shim';
@@ -15,6 +9,7 @@ import { percent } from './utils/math';
 import Spawner from './Spawner';
 import Container from './Container';
 import { cancelTimeout, executeAfterTimeout } from './utils/timeouts';
+import type { DraggingSprite } from './Spawner';
 
 function createApp(): Application {
     return new Application({
@@ -40,6 +35,7 @@ export class App {
     private static _viewport: Viewport;
     private static _app: Application;
     private static _resources: P_Utils.Dict<LoaderResource>;
+    private static _border: Graphics;
     static parentEl: HTMLDivElement;
 
     static set viewport(vp: Viewport) {
@@ -54,6 +50,10 @@ export class App {
         this._resources = res;
     }
 
+    static set border(b: Graphics) {
+        this._border = b;
+    }
+
     static get viewport() {
         return this._viewport;
     }
@@ -64,6 +64,10 @@ export class App {
 
     static get resources() {
         return this._resources;
+    }
+
+    static get border() {
+        return this._border;
     }
 }
 
@@ -136,71 +140,70 @@ function execute() {
     const border = viewport.addChild(new Graphics());
     border.lineStyle(20, 0xff0000).drawRect(0, 0, viewport.worldWidth, viewport.worldHeight);
 
+    App.border = border;
+
     app.stage.addChild(viewport);
 
     app.start();
 
     // @ts-ignore
 
-    // viewport.addChild(circleSpawner.sprite);
-    interface DraggingSprite extends Sprite {
-        dragging: { x; y };
-        data?: InteractionData;
-    }
+    // viewport.addChild(circleSpawner.sprite)
+    // function onDragStart(e: InteractionEvent) {
+    //     const sprite: DraggingSprite = e.currentTarget as DraggingSprite;
+    //     const viewport = App.viewport;
 
-    function onDragStart(e: InteractionEvent) {
-        const sprite: DraggingSprite = e.currentTarget as DraggingSprite;
-        const viewport = App.viewport;
+    //     console.log(sprite.texture);
 
-        sprite.data = e.data;
-        sprite.alpha = 0.5;
-        let { x, y } = e.data.getLocalPosition(viewport);
-        sprite.dragging = { x, y };
-        viewport.drag({ pressDrag: false });
-    }
+    //     sprite.data = e.data;
+    //     sprite.alpha = 0.5;
+    //     let { x, y } = e.data.getLocalPosition(viewport);
+    //     sprite.dragging = { x, y };
+    //     viewport.drag({ pressDrag: false });
+    // }
 
-    function onDragEnd(e: InteractionEvent) {
-        const sprite: DraggingSprite = e.currentTarget as DraggingSprite;
+    // function onDragEnd(e: InteractionEvent) {
+    //     const sprite: DraggingSprite = e.currentTarget as DraggingSprite;
 
-        sprite.alpha = 1;
-        sprite.dragging = null;
-        sprite.data = null;
-        viewport.drag();
-    }
+    //     sprite.alpha = 1;
+    //     sprite.dragging = null;
+    //     sprite.data = null;
+    //     viewport.drag();
+    // }
 
-    function checkIfBeyondWorld(sprite: DraggingSprite, x: number, y: any) {
-        let spriteMoveX = sprite.position.x + (x - sprite.dragging.x);
-        let spriteMoveY = sprite.position.y + (y - sprite.dragging.y);
+    // function checkIfBeyondWorld(sprite: DraggingSprite, x: number, y: any) {
+    //     let spriteMoveX = sprite.position.x + (x - sprite.dragging.x);
+    //     let spriteMoveY = sprite.position.y + (y - sprite.dragging.y);
 
-        // Check if beyond in the x-axis
-        if (
-            spriteMoveX + sprite.width > viewport.worldWidth - border.line.width / 2 ||
-            spriteMoveX < 0 + border.line.width / 2
-        )
-            return true;
+    //     // Check if beyond in the x-axis
+    //     if (
+    //         spriteMoveX + sprite.width > viewport.worldWidth - border.line.width / 2 ||
+    //         spriteMoveX < 0 + border.line.width / 2
+    //     )
+    //         return true;
 
-        // Check if beyond in the y-axis
-        if (
-            spriteMoveY + sprite.height > viewport.worldHeight - border.line.width / 2 ||
-            spriteMoveY < border.line.width / 2
-        )
-            return true;
-    }
+    //     // Check if beyond in the y-axis
+    //     if (
+    //         spriteMoveY + sprite.height > viewport.worldHeight - border.line.width / 2 ||
+    //         spriteMoveY < border.line.width / 2
+    //     )
+    //         return true;
+    // }
 
-    function onDragMove(e: InteractionEvent) {
-        const sprite: DraggingSprite = e.currentTarget as DraggingSprite;
-        const viewport = App.viewport;
+    // function onDragMove(e: InteractionEvent) {
+    //     const sprite: DraggingSprite = e.currentTarget as DraggingSprite;
+    //     const viewport = App.viewport;
 
-        if (sprite.dragging) {
-            let { x, y } = e.data.getLocalPosition(viewport);
+    //     if (sprite.dragging) {
+    //         let { x, y } = e.data.getLocalPosition(viewport);
 
-            if (!checkIfBeyondWorld(sprite, x, y)) {
-                sprite.position.x += x - sprite.dragging.x;
-                sprite.position.y += y - sprite.dragging.y;
-                sprite.dragging = { x, y };
-            }
-        }
-    }
+    //         if (!checkIfBeyondWorld(sprite, x, y)) {
+    //             sprite.position.x += x - sprite.dragging.x;
+    //             sprite.position.y += y - sprite.dragging.y;
+    //             sprite.dragging = { x, y };
+    //         }
+    //     }
+    // }
 
     let seatingContainer = new Container();
 
@@ -208,16 +211,19 @@ function execute() {
     const rect = new Graphics();
 
     rect.beginFill(0xdea3f8)
-        .drawRect(0, percent(88, app.view.height), app.view.width, percent(85, app.view.height))
+        .drawRect(0, percent(88, app.view.height), app.view.width, percent(15, app.view.height))
         .endFill();
 
     function seatingContainerFunction(container: PIXIContainer, child: DisplayObject) {
         if (!(child instanceof Sprite)) return;
 
         child.anchor.set(0.5);
-        child.scale.set(0.15);
+
+        // Make the scale 50% of the rectangle's height divided by the original height
+        child.scale.set(percent(50, rect.height) / child.height);
+
         child.x = container.width / 2;
-        child.y = percent(88, app.view.height) + percent(50, percent(12, app.view.height))
+        child.y = percent(88, app.view.height) + percent(50, percent(12, app.view.height));
 
         container.addChild(child);
     }
@@ -227,11 +233,6 @@ function execute() {
     let texture = App.resources.rounded_seat.texture;
 
     const circleSpawner = new Spawner(texture, app);
-
-    circleSpawner.sprite.on('pointerdown', onDragStart);
-    circleSpawner.sprite.on('pointermove', onDragMove);
-    circleSpawner.sprite.on('pointerup', onDragEnd);
-    circleSpawner.sprite.on('pointerupoutside', onDragEnd);
 
     seatingContainer.addChild(circleSpawner.sprite, seatingContainerFunction);
     app.stage.addChild(seatingContainer.this);
