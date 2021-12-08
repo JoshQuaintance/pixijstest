@@ -146,65 +146,6 @@ function execute() {
 
     app.start();
 
-    // @ts-ignore
-
-    // viewport.addChild(circleSpawner.sprite)
-    // function onDragStart(e: InteractionEvent) {
-    //     const sprite: DraggingSprite = e.currentTarget as DraggingSprite;
-    //     const viewport = App.viewport;
-
-    //     console.log(sprite.texture);
-
-    //     sprite.data = e.data;
-    //     sprite.alpha = 0.5;
-    //     let { x, y } = e.data.getLocalPosition(viewport);
-    //     sprite.dragging = { x, y };
-    //     viewport.drag({ pressDrag: false });
-    // }
-
-    // function onDragEnd(e: InteractionEvent) {
-    //     const sprite: DraggingSprite = e.currentTarget as DraggingSprite;
-
-    //     sprite.alpha = 1;
-    //     sprite.dragging = null;
-    //     sprite.data = null;
-    //     viewport.drag();
-    // }
-
-    // function checkIfBeyondWorld(sprite: DraggingSprite, x: number, y: any) {
-    //     let spriteMoveX = sprite.position.x + (x - sprite.dragging.x);
-    //     let spriteMoveY = sprite.position.y + (y - sprite.dragging.y);
-
-    //     // Check if beyond in the x-axis
-    //     if (
-    //         spriteMoveX + sprite.width > viewport.worldWidth - border.line.width / 2 ||
-    //         spriteMoveX < 0 + border.line.width / 2
-    //     )
-    //         return true;
-
-    //     // Check if beyond in the y-axis
-    //     if (
-    //         spriteMoveY + sprite.height > viewport.worldHeight - border.line.width / 2 ||
-    //         spriteMoveY < border.line.width / 2
-    //     )
-    //         return true;
-    // }
-
-    // function onDragMove(e: InteractionEvent) {
-    //     const sprite: DraggingSprite = e.currentTarget as DraggingSprite;
-    //     const viewport = App.viewport;
-
-    //     if (sprite.dragging) {
-    //         let { x, y } = e.data.getLocalPosition(viewport);
-
-    //         if (!checkIfBeyondWorld(sprite, x, y)) {
-    //             sprite.position.x += x - sprite.dragging.x;
-    //             sprite.position.y += y - sprite.dragging.y;
-    //             sprite.dragging = { x, y };
-    //         }
-    //     }
-    // }
-
     let seatingContainer = new Container();
 
     // seatingContainer.this.height = percent(22, app.view.height);
@@ -232,8 +173,10 @@ function execute() {
 
     let texture = App.resources.rounded_seat.texture;
 
-    const circleSpawner = new Spawner(texture, app);
+    const seatSpawner = new Spawner(texture, 'seat');
 
-    seatingContainer.addChild(circleSpawner.sprite, seatingContainerFunction);
+    // const circleSpawner = new Spawner(texture, app);
+
+    seatingContainer.addChild(seatSpawner.sprite, seatingContainerFunction);
     app.stage.addChild(seatingContainer.this);
 }
