@@ -104,6 +104,7 @@ export default class Spawner {
 
         const clone = new SpawnedObject(this.createClone());
 
+        clone.sprite.anchor.set(0.5);
         clone.sprite.x = App.viewport.center.x;
         clone.sprite.y = App.viewport.center.y;
 

@@ -137,6 +137,17 @@ function execute() {
     viewport.fit(false, viewport.screenWidth, viewport.screenHeight);
     viewport.moveCenter(viewport.worldWidth / 2, viewport.worldHeight / 2);
 
+    let texture = App.resources.rounded_seat.texture;
+
+    const cursor = new Graphics();
+
+    cursor
+        .lineStyle(2, 0xff0000)
+        .drawRect(app.view.width / 2 - 9, percent(88, app.view.height) / 2, 20, 2)
+        .drawRect(app.view.width / 2, percent(88, app.view.height) / 2 - 9, 2, 20);
+
+    app.stage.addChild(cursor);
+
     const border = viewport.addChild(new Graphics());
     border.lineStyle(20, 0xff0000).drawRect(0, 0, viewport.worldWidth, viewport.worldHeight);
 
@@ -170,8 +181,6 @@ function execute() {
     }
 
     seatingContainer.addChild(rect);
-
-    let texture = App.resources.rounded_seat.texture;
 
     const seatSpawner = new Spawner(texture, 'seat');
 
