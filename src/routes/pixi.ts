@@ -1,4 +1,11 @@
-import type { InteractionEvent, utils as P_Utils, Container as PIXIContainer, DisplayObject } from 'pixi.js';
+import {
+    InteractionEvent,
+    utils as P_Utils,
+    Container as PIXIContainer,
+    DisplayObject,
+    InteractionManager,
+    Rectangle,
+} from 'pixi.js';
 
 // Make sure PIXI have enough information so development dev mode works fluently
 import '@mszu/pixi-ssr-shim';
@@ -6,10 +13,11 @@ import { Application, Sprite, LoaderResource, Graphics } from 'pixi.js';
 import { Viewport } from 'pixi-viewport';
 
 import { percent } from './utils/math';
-import Spawner from './Spawner';
+import Spawner, { checkIfBeyondWorld } from './Spawner';
 import Container from './Container';
 import { cancelTimeout, executeAfterTimeout } from './utils/timeouts';
 import type { DraggingSprite } from './Spawner';
+import { compute_rest_props } from 'svelte/internal';
 
 function createApp(): Application {
     return new Application({
@@ -102,6 +110,7 @@ export async function run(el: HTMLDivElement) {
 }
 
 function execute() {
+    let mode = 'view';
     const app = App.app;
 
     App.viewport = new Viewport({
@@ -139,14 +148,14 @@ function execute() {
 
     let texture = App.resources.rounded_seat.texture;
 
-    const cursor = new Graphics();
+    // const cursor = new Graphics();
 
-    cursor
-        .lineStyle(2, 0xff0000)
-        .drawRect(app.view.width / 2 - 9, percent(88, app.view.height) / 2, 20, 2)
-        .drawRect(app.view.width / 2, percent(88, app.view.height) / 2 - 9, 2, 20);
+    // cursor
+    //     .lineStyle(2, 0xff0000)
+    //     .drawRect(app.view.width / 2 - 9, percent(88, app.view.height) / 2, 20, 2)
+    //     .drawRect(app.view.width / 2, percent(88, app.view.height) / 2 - 9, 2, 20);
 
-    app.stage.addChild(cursor);
+    // app.stage.addChild(cursor);
 
     const border = viewport.addChild(new Graphics());
     border.lineStyle(20, 0xff0000).drawRect(0, 0, viewport.worldWidth, viewport.worldHeight);
@@ -159,7 +168,6 @@ function execute() {
 
     let seatingContainer = new Container();
 
-    // seatingContainer.this.height = percent(22, app.view.height);
     const rect = new Graphics();
 
     rect.beginFill(0xdea3f8)
@@ -181,11 +189,79 @@ function execute() {
     }
 
     seatingContainer.addChild(rect);
-
     const seatSpawner = new Spawner(texture, 'seat');
+    const seatSpawnerMode = new Sprite(texture);
+    const screenContainer = new Rectangle(0, 0, app.stage.width);
 
-    // const circleSpawner = new Spawner(texture, app);
+    seatSpawner.sprite.anchor.set(0.5);
+    seatSpawner.sprite.scale.set(percent(50, rect.height) / seatSpawner.sprite.height);
 
-    seatingContainer.addChild(seatSpawner.sprite, seatingContainerFunction);
+    seatingContainer.addChild(seatSpawnerMode, seatingContainerFunction);
     app.stage.addChild(seatingContainer.this);
+
+    seatSpawnerMode.interactive = true;
+    seatSpawnerMode.on('pointerdown', (e) => {
+        mode = mode == 'build' ? 'view' : 'build';
+
+        if (mode != 'build') {
+            seatSpawner.sprite.destroy();
+        } else {
+            viewport.addChild(seatSpawner.sprite);
+
+            let intManager = new InteractionManager(app.renderer);
+            let mouse = intManager.mouse;
+
+            seatSpawner.sprite.x = mouse.global.x != -999999 ? mouse.global.x : viewport.center.x;
+            seatSpawner.sprite.y = mouse.global.y != -999999 ? mouse.global.y : viewport.center.y;
+            seatSpawner.sprite.alpha = 0.5;
+
+            function highlighting(e: InteractionEvent) {
+                console.log('s');
+                // const sprite: DraggingSprite = seatSpawner.sprite as DraggingSprite;
+                // const viewport = App.viewport;
+                // let { x, y } = e.data.getLocalPosition(viewport);
+                // if (sprite.dragging) {
+                //     if (!checkIfBeyondWorld(sprite, x, y)) {
+                //         sprite.position.x += x - sprite.dragging.x;
+                //         sprite.position.y += y - sprite.dragging.y;
+                //         sprite.dragging = { x, y };
+                //     }
+                // } else {
+                //     sprite.position.x = x;
+                //     sprite.position.y = y;
+                // }
+            }
+            screenContainer.on('pointermove', highlighting);
+        }
+    });
+
+    // if (mode == 'build') {
+    //     viewport.addChild(seatSpawner.sprite);
+
+    //     let intManager = new InteractionManager(app.renderer);
+    //     let mouse = intManager.mouse;
+
+    //     seatSpawner.sprite.x = mouse.global.x != -999999 ? mouse.global.x : viewport.center.x;
+    //     seatSpawner.sprite.y = mouse.global.y != -999999 ? mouse.global.y : viewport.center.y;
+    //     seatSpawner.sprite.alpha = 0.5;
+
+    //     function highlighting(e: InteractionEvent) {
+    //         const sprite: DraggingSprite = seatSpawner.sprite as DraggingSprite;
+    //         const viewport = App.viewport;
+    //         let { x, y } = e.data.getLocalPosition(viewport);
+
+    //         if (sprite.dragging) {
+    //             if (!checkIfBeyondWorld(sprite, x, y)) {
+    //                 sprite.position.x += x - sprite.dragging.x;
+    //                 sprite.position.y += y - sprite.dragging.y;
+    //                 sprite.dragging = { x, y };
+    //             }
+    //         } else {
+    //             sprite.position.x = x;
+    //             sprite.position.y = y;
+    //         }
+    //     }
+
+    //     viewport.on('pointermove', highlighting);
+    // }
 }

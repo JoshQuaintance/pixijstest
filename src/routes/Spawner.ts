@@ -29,7 +29,7 @@ export interface DraggingSprite extends Sprite {
 }
 
 // TODO: Move this into a utils file
-function checkIfBeyondWorld(sprite: DraggingSprite, x: number, y: any) {
+export function checkIfBeyondWorld(sprite: DraggingSprite, x: number, y: any) {
     let spriteMoveX = sprite.position.x + (x - sprite.dragging.x);
     let spriteMoveY = sprite.position.y + (y - sprite.dragging.y);
 
@@ -62,7 +62,7 @@ export default class Spawner {
         return clone;
     }
 
-    private spawnObject() {
+    private spawnObject(xCoords, yCoords) {
         function onDragMove(e: InteractionEvent) {
             const sprite: DraggingSprite = e.currentTarget as DraggingSprite;
             const viewport = App.viewport;
@@ -105,8 +105,8 @@ export default class Spawner {
         const clone = new SpawnedObject(this.createClone());
 
         clone.sprite.anchor.set(0.5);
-        clone.sprite.x = App.viewport.center.x;
-        clone.sprite.y = App.viewport.center.y;
+        clone.sprite.x = xCoords;
+        clone.sprite.y = yCoords;
 
         App.viewport.addChild(clone.sprite);
         clone.sprite.interactive = true;
@@ -120,9 +120,12 @@ export default class Spawner {
         return true;
     }
 
-    private clicked() {
+    private clicked(e) {
+        
         App.app.renderer.plugins.interaction.setCursorMode('pointer');
-        this.spawnObject();
+        let { x, y } = e.data.getLocalPosition(App.viewport);
+
+        this.spawnObject(x, y);
     }
 
     constructor(src: Texture, name: string) {
@@ -137,7 +140,7 @@ export default class Spawner {
         // Registers the spawner into storage
         Spawner.spawners.push(this);
 
-        this._sprite.on('pointerdown', () => this.clicked());
+        this._sprite.on('pointerdown', (e) => this.clicked(e));
     }
 
     set x(val: number) {
