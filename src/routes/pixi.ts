@@ -1,4 +1,4 @@
-import {
+import type {
     InteractionEvent,
     utils as P_Utils,
     Container as PIXIContainer,
